@@ -1,7 +1,17 @@
-import type { Agent } from '../types/entities/agent';
-import { AGENT_STATUS } from '../types/entities/agent';
+// ============================================================================
+// DADOS MOCKADOS DE AGENTES
+// ============================================================================
+// Este arquivo contém dados falsos (mock) para desenvolvimento
+// Em produção, estes dados viriam de uma API real
 
-// Dados mock para agentes
+import type { Agent } from '../types/entities/agent';  // Importa o tipo Agent
+import { AGENT_STATUS } from '../types/entities/agent'; // Importa as constantes de status
+
+/**
+ * 📊 DADOS MOCKADOS PARA DESENVOLVIMENTO
+ * Estes são dados falsos que simulam o que viria de uma API
+ * Usado durante o desenvolvimento para testar a interface
+ */
 export const mockAgents: Agent[] = [
   {
     id: '1',
@@ -155,36 +165,59 @@ export const mockAgents: Agent[] = [
   }
 ];
 
-// Função para simular delay de API
+// ============================================================================
+// FUNÇÕES UTILITÁRIAS
+// ============================================================================
+// Funções auxiliares para trabalhar com os dados
+
+/**
+ * ⏱️ SIMULAR DELAY DE API
+ * Simula o tempo que uma API real levaria para responder
+ * Usado para tornar o desenvolvimento mais realista
+ */
 export const delay = (ms: number): Promise<void> => 
   new Promise(resolve => setTimeout(resolve, ms));
 
-// Função para gerar ID único
+/**
+ * 🆔 GERAR ID ÚNICO
+ * Cria um ID único para novos registros
+ * Em produção, o ID seria gerado pelo banco de dados
+ */
 export const generateId = (): string => {
   return Math.random().toString(36).substr(2, 9);
 };
 
-// Função para formatar data
+/**
+ * 📅 FORMATAR DATA PARA EXIBIÇÃO
+ * Converte datas em formato legível para o usuário brasileiro
+ * Exemplo: "2024-01-15T10:00:00Z" vira "15/01/2024, 10:00"
+ */
 export const formatDate = (date: Date | string): string => {
-  if (!date) return '';
-  const d = new Date(date);
-  return d.toLocaleDateString('pt-BR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+  if (!date) return '';                    // Se não tem data, retorna vazio
+  const d = new Date(date);               // Converte para objeto Date
+  return d.toLocaleDateString('pt-BR', {  // Formata no padrão brasileiro
+    year: 'numeric',    // Ano com 4 dígitos
+    month: '2-digit',   // Mês com 2 dígitos
+    day: '2-digit',     // Dia com 2 dígitos
+    hour: '2-digit',    // Hora com 2 dígitos
+    minute: '2-digit'   // Minuto com 2 dígitos
   });
 };
 
-// Função para formatar status
+/**
+ * 🏷️ FORMATAR STATUS PARA EXIBIÇÃO
+ * Converte o status do agente em label e cor para a interface
+ * Retorna: { label: "Ativo", color: "green" }
+ */
 export const formatStatus = (status: string): { label: string; color: string } => {
+  // Mapa que relaciona cada status com sua apresentação visual
   const statusMap: Record<string, { label: string; color: string }> = {
-    [AGENT_STATUS.ACTIVE]: { label: 'Ativo', color: 'green' },
-    [AGENT_STATUS.INACTIVE]: { label: 'Inativo', color: 'gray' },
-    [AGENT_STATUS.PENDING]: { label: 'Pendente', color: 'yellow' },
-    [AGENT_STATUS.SUSPENDED]: { label: 'Suspenso', color: 'red' }
+    [AGENT_STATUS.ACTIVE]: { label: 'Ativo', color: 'green' },      // Verde para ativo
+    [AGENT_STATUS.INACTIVE]: { label: 'Inativo', color: 'gray' },   // Cinza para inativo
+    [AGENT_STATUS.PENDING]: { label: 'Pendente', color: 'yellow' }, // Amarelo para pendente
+    [AGENT_STATUS.SUSPENDED]: { label: 'Suspenso', color: 'red' }   // Vermelho para suspenso
   };
   
+  // Retorna a configuração do status ou um padrão se não encontrar
   return statusMap[status] || { label: status, color: 'gray' };
 };
