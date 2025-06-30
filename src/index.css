@@ -1,0 +1,241 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 px-6 py-3 rounded-xl font-semibold transition-all duration-200;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .stats-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 lg:p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-300 hover:scale-[1.02];
+  }
+  
+  .table-container {
+    @apply overflow-x-auto rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700;
+  }
+  
+  .table-row {
+    @apply hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200;
+  }
+  
+  .icon-button {
+    @apply p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors;
+  }
+  
+  .status-badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold;
+  }
+  
+  .status-success {
+    @apply bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400;
+  }
+  
+  .status-warning {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400;
+  }
+  
+  .status-error {
+    @apply bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+  }
+  
+  /* Melhorias de responsividade */
+  .mobile-hidden {
+    @apply hidden sm:block;
+  }
+  
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+  
+  .xs-hidden {
+    @apply hidden xs:block;
+  }
+  
+  .xs-only {
+    @apply block xs:hidden;
+  }
+  
+  .responsive-text {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+  
+  .responsive-padding {
+    @apply p-2 sm:p-4 lg:p-6;
+  }
+  
+  .responsive-margin {
+    @apply m-2 sm:m-4 lg:m-6;
+  }
+  
+  .responsive-gap {
+    @apply gap-2 sm:gap-4 lg:gap-6;
+  }
+  
+  /* Melhorias específicas para cards */
+  @media (max-width: 640px) {
+    .stats-card {
+      min-height: auto;
+    }
+    
+    .stats-card .text-3xl {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+    
+    .stats-card .text-2xl {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
+  }
+  
+  /* Melhorias para tabelas em mobile */
+  @media (max-width: 640px) {
+    .table-container {
+      border-radius: 0.75rem;
+    }
+    
+    .table-row {
+      padding: 0.75rem 1rem;
+    }
+  }
+  
+  /* Melhorias para gráficos em mobile e responsividade */
+  @media (max-width: 768px) {
+    .recharts-wrapper {
+      font-size: 10px;
+    }
+    
+    .recharts-cartesian-axis-tick-value {
+      font-size: 10px;
+    }
+    
+    .recharts-pie-label-text {
+      font-size: 10px;
+    }
+    
+    .recharts-tooltip-wrapper {
+      font-size: 11px;
+    }
+  }
+  
+  /* Melhorias específicas para gráficos de pizza */
+  .recharts-pie-sector {
+    transition: all 0.3s ease;
+  }
+  
+  .recharts-pie-sector:hover {
+    filter: brightness(1.1);
+  }
+  
+  /* Melhorias para ResponsiveContainer */
+  .recharts-responsive-container {
+    min-height: 200px;
+  }
+  
+  @media (min-width: 640px) {
+    .recharts-responsive-container {
+      min-height: 250px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .recharts-responsive-container {
+      min-height: 300px;
+    }
+  }
+  
+  /* Melhorias para formulários em mobile */
+  @media (max-width: 640px) {
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+      padding: 0.625rem 1rem;
+      font-size: 0.875rem;
+      border-radius: 0.75rem;
+    }
+    
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="password"],
+    select,
+    textarea {
+      font-size: 16px; /* Previne zoom no iOS */
+    }
+  }
+}
+
+/* Modal and overlay styles */
+.modal-overlay {
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
