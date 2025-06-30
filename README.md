@@ -414,35 +414,264 @@ npm run dev    # Iniciar servidor
 
 ## 🆕 Como Criar um Novo CRUD
 
-> **Exemplo:** Criando um CRUD de **Fornecedores**
+> **✨ Sistema REALMENTE genérico!** Você só precisa definir colunas, filtros e está pronto!
 
-### 1️⃣ **Criar Interface TypeScript**
+### 🎯 **O que você precisa fazer:**
+1. **Definir interface** da sua entidade (30 segundos) 
+2. **Criar dados mock** (1 minuto)
+3. **Configurar colunas e filtros** (2 minutos)
+4. **Usar o componente genérico** (30 segundos)
 
+### 🎊 **O que o sistema faz automaticamente:**
+- 📊 **Tabela responsiva** com suas colunas
+- 🔍 **Busca automática** pelos campos que você escolher
+- 🎛️ **Filtros dinâmicos** (text, select, date, etc.)
+- 📄 **Paginação completa** com navegação
+- ⚡ **Ordenação** por qualquer coluna clicável
+- 🎨 **Modo escuro/claro** automático
+- 📱 **100% responsivo** (mobile + desktop)
+
+---
+
+### **📋 Exemplo Prático: CRUD de Fornecedores**
+
+#### **1️⃣ Criar Interface (30 segundos)**
 ```typescript
 // src/types/entities/supplier.ts
-export interface Supplier {
-  id: string;                    // ID único
-  name: string;                  // Nome do fornecedor
-  email: string;                 // Email de contato
-  phone: string;                 // Telefone
-  cnpj: string;                  // CNPJ da empresa
-  category: string;              // Categoria (eletrônicos, roupas, etc.)
-  status: 'active' | 'inactive'; // Status ativo/inativo
-  createdAt: string;             // Data de criação
-  contract_value: number;        // Valor do contrato
-}
+import type { BaseEntity } from '../crud';
 
-// Opções para os filtros
-export const SUPPLIER_CATEGORIES = [
-  'eletrônicos', 'roupas', 'alimentação', 'serviços'
-];
+export interface Supplier extends BaseEntity {
+  name: string;        // Nome da empresa
+  cnpj: string;        // CNPJ
+  contact: string;     // Pessoa de contato
+  email: string;       // Email
+  phone: string;       // Telefone
+  category: string;    // Categoria (serviços, produtos, etc.)
+  status: 'active' | 'inactive';
+}
 ```
 
-### 2️⃣ **Criar Dados Mockados**
-
+#### **2️⃣ Criar Dados Mock (1 minuto)**
 ```typescript
 // src/data/mockSuppliers.ts
 import type { Supplier } from '../types/entities/supplier';
+
+export const mockSuppliers: Supplier[] = [
+  {
+    id: '1',
+    name: 'TechCorp Soluções',
+    cnpj: '12.345.678/0001-90',
+    contact: 'João Silva',
+    email: 'contato@techcorp.com',
+    phone: '(11) 99999-0000',
+    category: 'tecnologia',
+    status: 'active',
+    createdAt: '2024-01-15T10:00:00Z'
+  },
+  {
+    id: '2',
+    name: 'ServiCorp Ltda',
+    cnpj: '98.765.432/0001-10',
+    contact: 'Maria Santos',
+    email: 'maria@servicorp.com',
+    phone: '(11) 88888-1111',
+    category: 'servicos',
+    status: 'active',
+    createdAt: '2024-02-20T14:30:00Z'
+  }
+  // ... mais fornecedores
+];
+```
+
+#### **3️⃣ Configurar CRUD (2 minutos)**
+```typescript
+// src/configs/entities/supplierConfig.tsx
+import type { CRUDConfig } from '../../types/crud';
+import type { Supplier } from '../../types/entities/supplier';
+
+export const supplierConfig: CRUDConfig<Supplier> = {
+  entity: 'suppliers',
+  title: 'Fornecedores',
+  
+  // 📊 Definir colunas da tabela
+  table: {
+    columns: [
+      { key: 'name', label: 'Empresa', sortable: true },
+      { key: 'cnpj', label: 'CNPJ' },
+      { key: 'contact', label: 'Contato' },
+      { key: 'email', label: 'Email' },
+      { key: 'phone', label: 'Telefone' },
+      { key: 'category', label: 'Categoria' },
+      { 
+        key: 'status', 
+        label: 'Status',
+        render: (value) => (
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+            value === 'active' 
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+          }`}>
+            {value === 'active' ? '✓ Ativo' : '✗ Inativo'}
+          </span>
+        )
+      }
+    ],
+    defaultSort: { field: 'name', direction: 'asc' },
+    pageSize: 10
+  },
+  
+  // 🔍 Definir filtros
+  filters: [
+    {
+      key: 'category',
+      label: 'Categoria',
+      type: 'select',
+      options: [
+        { value: 'tecnologia', label: 'Tecnologia' },
+        { value: 'servicos', label: 'Serviços' },
+        { value: 'produtos', label: 'Produtos' },
+        { value: 'consultoria', label: 'Consultoria' }
+      ]
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'active', label: 'Ativo' },
+        { value: 'inactive', label: 'Inativo' }
+      ]
+    }
+  ]
+};
+```
+
+#### **4️⃣ Criar Página (30 segundos)**
+```typescript
+// src/pages/SuppliersPage.tsx
+import { GenericCRUDPage } from '../components/GenericCRUDPage';
+import { useGenericCRUD } from '../hooks/useGenericCRUD';
+import { CRUDService } from '../services/CRUDService';
+import { supplierConfig } from '../configs/entities/supplierConfig';
+import { mockSuppliers } from '../data/mockSuppliers';
+import type { Supplier } from '../types/entities/supplier';
+
+// Criar serviço (dados mock em desenvolvimento)
+const supplierService = new CRUDService<Supplier>('suppliers', mockSuppliers, '', true);
+
+export function SuppliersPage() {
+  // Hook genérico que faz toda a mágica
+  const crud = useGenericCRUD(supplierService, ['name', 'contact', 'email']);
+  
+  return (
+    <div className="p-6">
+      <GenericCRUDPage config={supplierConfig} crud={crud} />
+    </div>
+  );
+}
+```
+
+#### **5️⃣ Adicionar ao Menu (15 segundos)**
+```typescript
+// src/components/layout/MainLayout.tsx
+import { BuildingOfficeIcon } from '@heroicons/react/24/outline';
+
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: HomeIcon },
+  { name: 'Agentes', href: '/agents', icon: AgentsIcon },
+  { name: 'Produtos', href: '/products', icon: ShoppingBagIcon },
+  { name: 'Fornecedores', href: '/suppliers', icon: BuildingOfficeIcon }, // ← Adicionar
+  { name: 'Relatórios', href: '/reports', icon: ChartBarIcon },
+  { name: 'Configurações', href: '/settings', icon: Cog6ToothIcon },
+];
+```
+
+#### **6️⃣ Adicionar Rota (15 segundos)**
+```typescript
+// src/App.tsx
+import { SuppliersPage } from './pages/SuppliersPage';
+
+<Routes>
+  <Route path="/" element={<Dashboard />} />
+  <Route path="/agents" element={<AgentsPage />} />
+  <Route path="/products" element={<ProductsPage />} />
+  <Route path="/suppliers" element={<SuppliersPage />} /> {/* ← Adicionar */}
+  <Route path="/reports" element={<div>Relatórios</div>} />
+  <Route path="/settings" element={<div>Configurações</div>} />
+</Routes>
+```
+
+## 🎊 **Pronto! CRUD Completo em Menos de 5 Minutos!**
+
+**Você acabou de criar um CRUD completo com:**
+- ✅ Tabela com todas as colunas definidas
+- ✅ Busca automática por nome, contato e email
+- ✅ Filtros por categoria e status
+- ✅ Paginação automática
+- ✅ Ordenação por qualquer coluna
+- ✅ Modo escuro/claro automático
+- ✅ 100% responsivo (mobile + desktop)
+- ✅ Animações suaves
+- ✅ Sistema de notificações
+
+### 🔄 **Para Produção: Trocar Mock por API**
+```typescript
+// src/pages/SuppliersPage.tsx
+// Troca apenas uma linha:
+const supplierService = new CRUDService<Supplier>('suppliers', [], 'https://api.empresa.com', false);
+//                                                            ↑ array vazio    ↑ URL da API    ↑ false = usar API
+```
+
+---
+
+### 🎯 **Exemplos Práticos de Outros CRUDs**
+
+#### **CRUD de Clientes**
+- Interface: `{ name, email, phone, address, segment, status }`
+- Filtros: `segment` (pessoa física/jurídica), `status`
+- Busca: `name`, `email`, `phone`
+
+#### **CRUD de Funcionários**
+- Interface: `{ name, email, department, role, salary, status }`
+- Filtros: `department`, `role`, `status`
+- Busca: `name`, `email`, `department`
+
+#### **CRUD de Pedidos**
+- Interface: `{ customer, product, quantity, total, status, date }`
+- Filtros: `status`, `date` (range), `customer`
+- Busca: `customer`, `product`
+
+### 💡 **Dicas para Personalizar**
+
+#### **Colunas com Renderização Personalizada**
+```typescript
+{
+  key: 'price',
+  label: 'Preço',
+  render: (value) => new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value)
+}
+```
+
+#### **Filtros Avançados**
+```typescript
+{
+  key: 'created_at',
+  label: 'Data de Criação',
+  type: 'daterange',
+  placeholder: 'Selecione o período'
+}
+```
+
+#### **Busca Personalizada**
+```typescript
+// No useGenericCRUD, defina os campos de busca
+const crud = useGenericCRUD(service, ['name', 'email', 'phone', 'address']);
+```
+
+---
 
 export const mockSuppliers: Supplier[] = [
   {
@@ -590,6 +819,7 @@ Com esses passos, você terá um CRUD completo de Fornecedores com:
 - ✅ Paginação automática
 - ✅ Ordenação por colunas
 - ✅ Design responsivo
+- ✅ Modo escuro/claro
 - ✅ Animações suaves
 
 ---
@@ -683,1068 +913,93 @@ export const SchoolsPage: React.FC = () => {
 <Route path="/schools" element={<SchoolsPage />} />
 ```
 
-### 🎯 **RESULTADO: CRUD Completo em 4 minutos!**
+### 5️⃣ **Adicionar ao Menu (15 segundos)**
+```typescript
+// src/components/layout/MainLayout.tsx
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: HomeIcon },
+  { name: 'Agentes', href: '/agents', icon: AgentsIcon },
+  { name: 'Fornecedores', href: '/suppliers', icon: TruckIcon },
+  { name: 'Escolas', href: '/schools', icon: SchoolIcon }, // 👈 NOVO
+  { name: 'Relatórios', href: '/reports', icon: ChartBarIcon },
+];
+```
 
-- ✅ Tabela de escolas com ordenação
-- ✅ Filtros por tipo e número de alunos  
-- ✅ Busca em tempo real
-- ✅ Paginação automática
-- ✅ Design responsivo
-- ✅ Modo escuro/claro
-- ✅ Animações suaves
+### 6️⃣ **Comentários Explicativos no Código**
 
-**💡 É ISSO! Mesma facilidade para Produtos, Clientes, Funcionários, Fornecedores, ou qualquer entidade!**
+> **Para iniciantes:** Todo o código contém comentários simples explicando o que cada parte faz
+
+### 📋 **Principais Arquivos Comentados:**
+
+#### **🚀 Arquivos de Entrada**
+- `src/main.tsx` - Ponto de entrada da aplicação React
+- `src/App.tsx` - Configuração de rotas e navegação
+- `src/index.css` - Estilos globais e classes utilitárias
+
+#### **🎯 Sistema Genérico (Core)**
+- `src/types/crud.ts` - **Tipos que tornam o sistema genérico**
+- `src/services/CRUDService.ts` - **Serviço que funciona com qualquer entidade**
+- `src/hooks/useGenericCRUD.ts` - **Hook que gerencia todo estado do CRUD**
+- `src/components/GenericCRUDPage.tsx` - **Componente que renderiza qualquer CRUD**
+
+#### **📊 Exemplos Práticos**
+- `src/pages/ProductsPage.tsx` - **Exemplo perfeito de CRUD genérico**
+- `src/configs/entities/agentConfig.tsx` - **Configuração de CRUD**
+- `src/data/mockAgents.ts` - **Dados mockados para desenvolvimento**
+
+### 🔍 **Entendendo os Comentários:**
+```typescript
+// ============================================================================
+// TÍTULO DA SEÇÃO
+// ============================================================================
+// Explicação do que este arquivo/função faz
+
+/**
+ * 🎯 FUNÇÃO/COMPONENTE PRINCIPAL
+ * Explicação detalhada de como funciona
+ * 
+ * COMO USAR:
+ * Exemplo prático de uso
+ */
+```
+
+### 📚 **Conceitos Explicados nos Comentários:**
+1. **Como funciona o sistema genérico**
+2. **O que cada interface TypeScript faz**
+3. **Como o hook gerencia o estado**
+4. **Como criar configurações de CRUD**
+5. **Como trocar mock por API real**
+6. **Como personalizar colunas e filtros**
 
 ---
 
-## 📝 Comentários do Código
+## 🎊 **Resumo Final**
 
-### 🎯 **Para Iniciantes em React**
+### ✅ **O que foi implementado:**
+- ✅ **Sistema REALMENTE genérico** - crie CRUDs apenas com configuração
+- ✅ **Comentários explicativos** em todo o código para iniciantes
+- ✅ **Zero imports não utilizados** - código limpo
+- ✅ **Zero erros de lint** - seguindo boas práticas
+- ✅ **Build funcionando** - pronto para produção
+- ✅ **100% responsivo** - mobile e desktop
+- ✅ **Modo escuro/claro** - alternância automática
+- ✅ **Documentação completa** - passo a passo para criar CRUDs
 
-#### **1. Componentes (Components)**
-```typescript
-// Um componente é como um "bloco de construção" da interface
-// Exemplo: Botão, Tabela, Menu
-const MeuComponente: React.FC = () => {
-  return <div>Olá Mundo!</div>;  // JSX = HTML dentro do JavaScript
-};
-```
+### 🚀 **Como usar:**
+1. **Clone o projeto**
+2. **Execute `npm install && npm run dev`**
+3. **Acesse http://localhost:5173**
+4. **Veja o exemplo de Produtos funcionando**
+5. **Siga a documentação para criar seus próprios CRUDs**
 
-#### **2. Props (Propriedades)**
-```typescript
-// Props são dados que passamos para componentes
-interface ButtonProps {
-  text: string;        // Texto do botão
-  onClick: () => void; // Função executada no clique
-}
-
-const Button: React.FC<ButtonProps> = ({ text, onClick }) => {
-  return <button onClick={onClick}>{text}</button>;
-};
-```
-
-#### **3. State (Estado)**
-```typescript
-// State é como a "memória" do componente
-const [count, setCount] = useState(0); // count começa com 0
-
-// Para alterar: setCount(1), setCount(count + 1), etc.
-// Quando state muda, componente re-renderiza (atualiza tela)
-```
-
-#### **4. Hooks**
-```typescript
-// Hooks são funções especiais do React
-// useState = gerenciar estado
-// useEffect = executar ações (buscar dados, etc.)
-// Custom Hooks = nossa própria lógica reutilizável
-
-const useGenericCRUD = () => {
-  // Lógica complexa encapsulada
-  // Retorna dados e funções prontas para usar
-};
-```
-
-#### **5. TypeScript**
-```typescript
-// TypeScript adiciona "tipos" ao JavaScript
-// Evita erros e melhora autocompletar
-
-interface User {
-  id: number;     // id deve ser número
-  name: string;   // name deve ser texto
-  active: boolean; // active deve ser true/false
-}
-
-// Se tentar usar tipos errados, dá erro antes mesmo de rodar
-```
-
-### 🔧 **Arquivos Principais Comentados**
-
-#### **`src/main.tsx`** - Ponto de entrada
-```typescript
-// Arquivo que "inicia" toda aplicação React
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App.tsx'           // Componente principal
-import './index.css'                  // Estilos globais
-
-// "Conecta" o React com HTML da página
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />                          {/* Aplicação inteira */}
-  </React.StrictMode>,
-)
-```
-
-#### **`src/App.tsx`** - Roteamento
-```typescript
-// Define quais páginas existem e suas URLs
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
-function App() {
-  return (
-    <BrowserRouter>              {/* Ativa roteamento */}
-      <Routes>                   {/* Lista de rotas */}
-        <Route path="/" element={<Dashboard />} />        {/* / = Dashboard */}
-        <Route path="/agents" element={<AgentsPage />} /> {/* /agents = Agentes */}
-      </Routes>
-    </BrowserRouter>
-  );
-}
-```
+### 🎯 **Para criar um novo CRUD:**
+1. **Copie o padrão de `ProductsPage.tsx`**
+2. **Defina sua interface (30 segundos)**
+3. **Crie dados mock (1 minuto)**
+4. **Configure colunas e filtros (2 minutos)**
+5. **Adicione rota e menu (30 segundos)**
+6. **CRUD pronto em menos de 5 minutos!**
 
 ---
 
-## 🎨 Estilos e Layout
-
-### 🎨 **Tailwind CSS (Framework de Estilos)**
-
-Tailwind é um framework que usa **classes utilitárias** em vez de CSS tradicional:
-
-```html
-<!-- Jeito tradicional (CSS) -->
-<style>
-  .meu-botao {
-    background-color: blue;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-  }
-</style>
-<button class="meu-botao">Clique aqui</button>
-
-<!-- Jeito Tailwind (classes prontas) -->
-<button class="bg-blue-500 text-white px-6 py-3 rounded-lg">
-  Clique aqui
-</button>
-```
-
-### 🎯 **Classes Mais Usadas no Projeto**
-
-```css
-/* LAYOUT E ESPAÇAMENTO */
-flex            /* display: flex */
-flex-col        /* flex-direction: column */
-gap-4          /* gap: 1rem (16px) */
-p-4            /* padding: 1rem */
-px-6           /* padding-left/right: 1.5rem */
-py-3           /* padding-top/bottom: 0.75rem */
-mb-6           /* margin-bottom: 1.5rem */
-
-/* CORES */
-bg-blue-500    /* background azul */
-text-white     /* texto branco */
-text-gray-600  /* texto cinza */
-border-gray-200 /* borda cinza clara */
-
-/* TAMANHOS */
-w-full         /* width: 100% */
-h-12           /* height: 3rem (48px) */
-max-w-md       /* max-width: 28rem */
-
-/* EFEITOS */
-hover:bg-blue-600    /* azul mais escuro no hover */
-transition-colors    /* animação suave de cores */
-shadow-lg           /* sombra grande */
-rounded-lg          /* bordas arredondadas */
-
-/* RESPONSIVIDADE */
-sm:flex-row         /* flex-row apenas em telas pequenas+ */
-md:grid-cols-2      /* 2 colunas em telas médias+ */
-lg:px-8            /* padding maior em telas grandes+ */
-```
-
-### 🌙 **Modo Escuro (Dark Mode)**
-
-```html
-<!-- Classes que mudam automaticamente -->
-<div class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
-  <!-- 
-    Modo claro: fundo branco, texto escuro
-    Modo escuro: fundo cinza escuro, texto branco
-  -->
-</div>
-```
-
-### 📱 **Responsividade**
-
-```html
-<!-- Grid que se adapta ao tamanho da tela -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-  <!-- 
-    Mobile: 1 coluna
-    Tablet (md): 2 colunas  
-    Desktop (lg): 4 colunas
-  -->
-</div>
-```
-
-### 📊 **Responsividade Avançada Implementada**
-
-Este sistema foi projetado com **responsividade perfeita** em mente. Todas as telas se adaptam automaticamente a diferentes dispositivos:
-
-#### **🏠 Dashboard Responsivo**
-- **Cards de Métricas**: Grid adaptativo (1 coluna mobile → 2 tablet → 4 desktop)
-- **Gráficos**: Tamanhos responsivos com porcentagens em vez de pixels fixos
-- **Gráfico de Pizza**: `innerRadius="30%"` e `outerRadius="70%"` para adaptar a qualquer tela
-- **Textos e Ícones**: Tamanhos escalonados (`text-sm sm:text-base lg:text-lg`)
-- **Padding e Margins**: Responsivos (`p-3 sm:p-4 lg:p-6`)
-
-#### **👥 CRUDs Responsivos (Agentes, Fornecedores, etc.)**
-- **Tabelas**: Modo card em mobile, tabela completa em desktop
-- **Filtros**: Layout vertical em mobile, horizontal em desktop
-- **Paginação**: Menos botões em mobile, completa em desktop
-- **Calendário**: Tamanho adaptativo para seletores de data
-- **Botões**: Textos abreviados em mobile (`"Novo"` vs `"Novo Agente"`)
-
-#### **🔧 Componentes Genéricos Responsivos**
-- **Table.tsx**: Duas visualizações (cards mobile + tabela desktop)
-- **Button.tsx**: Tamanhos adaptativos
-- **MainLayout.tsx**: Sidebar colapsável, header responsivo
-- **Filtros**: Campos empilhados em mobile, grid em desktop
-
-#### **🎨 Classes CSS Responsivas Customizadas**
-```css
-/* Mobile-first: tamanhos menores primeiro */
-.stats-card {
-  @apply p-3 sm:p-4 lg:p-6;
-}
-
-/* Texto responsivo */
-.responsive-text {
-  @apply text-sm sm:text-base lg:text-lg;
-}
-
-/* Gráficos responsivos */
-@media (max-width: 768px) {
-  .recharts-wrapper { font-size: 10px; }
-  .recharts-pie-sector { transition: all 0.3s ease; }
-}
-```
-
-#### **📱 Breakpoints Utilizados**
-- **xs: 475px** - Smartphones pequenos
-- **sm: 640px** - Smartphones grandes
-- **md: 768px** - Tablets
-- **lg: 1024px** - Laptops
-- **xl: 1280px** - Desktops
-
----
-
-## 🔧 Configurações
-
-### 📦 **package.json Scripts**
-
-```json
-{
-  "scripts": {
-    "dev": "vite",                    // Servidor desenvolvimento
-    "build": "tsc -b && vite build", // Build para produção
-    "preview": "vite preview",        // Testar build localmente
-    "test": "npm run dev",           // Atalho personalizado
-    "setup": "npm install && npm run test" // Instalar + rodar
-  }
-}
-```
-
-### ⚙️ **tailwind.config.js**
-
-```javascript
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}", // Onde procurar classes Tailwind
-  ],
-  darkMode: 'class',              // Modo escuro via classe CSS
-  theme: {
-    extend: {
-      // Cores, fontes, espaçamentos customizados
-    },
-  },
-  plugins: [
-    require('@tailwindcss/forms'), // Plugin para formulários
-  ],
-}
-```
-
-### 🔧 **vite.config.ts**
-
-```typescript
-export default defineConfig({
-  plugins: [react()],           // Plugin do React
-  server: {
-    port: 5173,                // Porta do servidor
-    open: true,               // Abrir navegador automaticamente
-  },
-})
-```
-
----
-
-## � Migração Mock para API
-
-### � **Estado Atual vs. Futuro**
-
-#### **Atual (Desenvolvimento com Mocks):**
-```typescript
-export const agentService = new CRUDService<Agent>(
-  'agents',
-  mockAgents,  // ← Dados simulados em memória
-  {},
-  true         // ← Flag: usar mock = true
-);
-```
-
-#### **Futuro (Produção com API Real):**
-```typescript
-export const agentService = new CRUDService<Agent>(
-  'agents',
-  [],          // ← Array vazio (dados vêm da API)
-  { 
-    baseUrl: 'https://api.empresa.com',  // ← URL da sua API
-    headers: {
-      'Authorization': 'Bearer token',    // ← Token de auth
-      'Content-Type': 'application/json'
-    }
-  },
-  false        // ← Flag: usar API real = false
-);
-```
-
-### 🔧 **Implementação Necessária na API**
-
-Sua API deve implementar os seguintes endpoints:
-
-```bash
-# Listar com filtros e paginação
-GET /api/agents?page=1&limit=10&search=termo&status=active
-
-# Buscar por ID
-GET /api/agents/:id
-
-# Criar novo
-POST /api/agents
-Content-Type: application/json
-{
-  "name": "João Silva",
-  "email": "joao@exemplo.com",
-  "status": "active"
-}
-
-# Atualizar existente
-PUT /api/agents/:id
-Content-Type: application/json
-{
-  "name": "João Silva Santos",
-  "email": "joao.santos@exemplo.com"
-}
-
-# Deletar
-DELETE /api/agents/:id
-```
-
-### 📋 **Formato de Resposta Esperado**
-
-#### **Lista (GET /api/agents)**
-```json
-{
-  "data": [
-    {
-      "id": "1",
-      "name": "João Silva",
-      "email": "joao@exemplo.com",
-      "status": "active",
-      "createdAt": "2024-01-15T10:30:00Z"
-    }
-  ],
-  "pagination": {
-    "total": 150,
-    "page": 1,
-    "limit": 10,
-    "totalPages": 15
-  }
-}
-```
-
-#### **Item Individual (GET /api/agents/:id)**
-```json
-{
-  "data": {
-    "id": "1",
-    "name": "João Silva",
-    "email": "joao@exemplo.com",
-    "status": "active",
-    "createdAt": "2024-01-15T10:30:00Z"
-  }
-}
-```
-
-#### **Criação/Atualização (POST/PUT)**
-```json
-{
-  "data": {
-    "id": "1",
-    "name": "João Silva",
-    "email": "joao@exemplo.com",
-    "status": "active",
-    "createdAt": "2024-01-15T10:30:00Z"
-  },
-  "message": "Agente criado com sucesso"
-}
-```
-
-### ⚙️ **Configuração de Ambiente**
-
-Crie um arquivo `.env` na raiz do projeto:
-
-```bash
-# .env
-VITE_API_BASE_URL=https://api.empresa.com
-VITE_API_TOKEN=seu_token_aqui
-VITE_USE_MOCK=false
-```
-
-E ajuste o serviço para usar variáveis de ambiente:
-
-```typescript
-// src/services/agentService.ts
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-
-export const agentService = new CRUDService<Agent>(
-  'agents',
-  mockAgents,
-  { 
-    baseUrl: API_BASE_URL,
-    headers: {
-      'Authorization': `Bearer ${import.meta.env.VITE_API_TOKEN}`,
-      'Content-Type': 'application/json'
-    }
-  },
-  USE_MOCK  // Usar mock baseado na variável de ambiente
-);
-```
-
-### 🔄 **Processo de Migração Gradual**
-
-1. **Manter Mocks**: Continue usando mocks durante desenvolvimento
-### 🎨 **Responsividade Completa Implementada**
-
-Este sistema foi totalmente otimizado para oferecer uma experiência perfeita em **todos os dispositivos** - mobile, tablet e desktop. Cada componente foi cuidadosamente projetado para se adaptar automaticamente ao tamanho da tela.
-
-#### **📱 Melhorias de Responsividade por Componente**
-
-##### **1. Dashboard (Página Principal)**
-- ✅ **Cards de Estatísticas**: Grid responsivo (1 col mobile → 2 cols tablet → 4 cols desktop)
-- ✅ **Gráficos**: Redimensionamento automático com fontes adaptáveis
-- ✅ **Header**: Layout flexível com navegação otimizada
-- ✅ **Notificações**: Dropdown responsivo com posicionamento inteligente
-- ✅ **Sidebar**: Collapsa automaticamente em mobile com backdrop
-
-##### **2. Página de Agentes (CRUD Completo)**
-- ✅ **Header**: Título e botões adaptáveis com textos abreviados
-- ✅ **Filtros**: Campo de busca e botões responsivos
-- ✅ **Filtros Avançados**: Grid adaptável (1→2→3 colunas)
-- ✅ **Calendário**: Redimensionamento inteligente para mobile
-- ✅ **Cards de Estatísticas**: Layout responsivo com ícones adaptáveis
-- ✅ **Tabela**: 
-  - **Mobile**: Vista em cards com informações empilhadas
-  - **Tablet**: Colunas essenciais visíveis
-  - **Desktop**: Todas as colunas disponíveis
-- ✅ **Paginação**: Controles otimizados (3 páginas mobile, 5 desktop)
-- ✅ **Ações**: Botões compactos com tooltips
-
-##### **3. Componente Table (Genérico)**
-- ✅ **Header**: Busca e filtros responsivos
-- ✅ **Vista Mobile**: Cards empilhados com informações principais
-- ✅ **Vista Desktop**: Tabela completa com todas as colunas
-- ✅ **Ações**: Labels ocultas em mobile, apenas ícones
-- ✅ **Paginação**: Controles simplificados para mobile
-
-##### **4. Layout Principal (MainLayout)**
-- ✅ **Sidebar**: Responsive com toggle automático
-- ✅ **Header**: Logo, navegação e perfil adaptáveis
-- ✅ **Backdrop**: Overlay em mobile para fechar sidebar
-- ✅ **Conteúdo**: Padding responsivo (3→4→6→8)
-
-#### **🎯 Breakpoints Utilizados**
-
-```css
-/* Breakpoints customizados */
-xs: 475px   /* Smartphones grandes */
-sm: 640px   /* Tablets pequenos */
-md: 768px   /* Tablets */
-lg: 1024px  /* Desktops pequenos */
-xl: 1280px  /* Desktops grandes */
-2xl: 1536px /* Telas ultrawide */
-```
-
-#### **📐 Padrões de Responsividade**
-
-##### **Grid Layouts**
-```html
-<!-- Cards: 1 → 2 → 3 → 4 colunas -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-
-<!-- Formulários: 1 → 2 → 3 colunas -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-```
-
-##### **Flexbox Layouts**
-```html
-<!-- Header responsivo -->
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
-<!-- Botões adaptáveis -->
-<button class="w-full sm:w-auto justify-center sm:justify-start">
-```
-
-##### **Typography Responsiva**
-```html
-<!-- Títulos escalonados -->
-<h1 class="text-xl sm:text-2xl lg:text-3xl">
-<h2 class="text-lg sm:text-xl lg:text-2xl">
-<p class="text-sm sm:text-base">
-```
-
-##### **Spacing Responsivo**
-```html
-<!-- Padding adaptável -->
-<div class="p-3 sm:p-4 lg:p-6 xl:p-8">
-
-<!-- Gaps progressivos -->
-<div class="gap-3 sm:gap-4 lg:gap-6">
-```
-
-#### **🚀 Estratégias Mobile-First**
-
-##### **1. Conteúdo Empilhado**
-- Mobile: Informações em coluna única
-- Desktop: Layout em colunas múltiplas
-
-##### **2. Navegação Adaptável**
-- Mobile: Menu hambúrguer com sidebar
-- Desktop: Barra de navegação horizontal
-
-##### **3. Formulários Otimizados**
-- Mobile: Campos em largura total
-- Desktop: Campos em grid organizado
-
-##### **4. Tabelas Inteligentes**
-- Mobile: Cards com informações essenciais
-- Desktop: Tabela completa com scroll horizontal
-
-#### **🎨 Classes CSS Utilitárias Criadas**
-
-```css
-/* Visibilidade por dispositivo */
-.mobile-only    /* Apenas mobile */
-.mobile-hidden  /* Oculto no mobile */
-.xs-only        /* Apenas smartphones grandes */
-.xs-hidden      /* Oculto em smartphones grandes */
-
-/* Responsividade automática */
-.responsive-text     /* Texto escalonado */
-.responsive-padding  /* Padding progressivo */
-.responsive-gap      /* Espaçamento adaptável */
-
-/* Componentes otimizados */
-.stats-card          /* Cards com tamanhos adaptativos */
-.table-container     /* Tabelas responsivas */
-```
-
-#### **📏 Otimizações por Tamanho de Tela**
-
-##### **📱 Mobile (< 640px)**
-- Layout em coluna única
-- Botões em largura total
-- Textos e ícones reduzidos
-- Paginação simplificada
-- Cards empilhados
-- Sidebar colapsada
-
-##### **📟 Tablet (640px - 1024px)**
-- Layout híbrido (2-3 colunas)
-- Botões com tamanhos intermediários
-- Colunas essenciais da tabela
-- Formulários em 2 colunas
-- Sidebar opcional
-
-##### **🖥️ Desktop (> 1024px)**
-- Layout completo
-- Todas as colunas visíveis
-- Formulários em 3+ colunas
-- Botões com labels completos
-- Sidebar sempre visível
-- Paginação completa
-
-#### **🔧 Como Garantir Responsividade em Novos CRUDs**
-
-##### **1. Use os Padrões Estabelecidos**
-```tsx
-// Header padrão
-<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
-// Grid de cards
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-// Botões responsivos
-<button className="btn-primary w-full sm:w-auto justify-center sm:justify-start">
-```
-
-##### **2. Utilize o Componente Table Genérico**
-O componente `Table` já implementa todas as otimizações:
-```tsx
-<Table
-  data={data}
-  columns={columns}
-  actions={actions}
-  // Responsividade automática
-/>
-```
-
-##### **3. Siga a Estrutura de Classes**
-```tsx
-// Padding responsivo
-className="p-3 sm:p-4 lg:p-6"
-
-// Texto adaptável  
-className="text-sm sm:text-base lg:text-lg"
-
-// Gaps progressivos
-className="gap-3 sm:gap-4 lg:gap-6"
-```
-
-##### **4. Teste em Diferentes Tamanhos**
-- ✅ Mobile: 320px - 640px
-- ✅ Tablet: 640px - 1024px  
-- ✅ Desktop: 1024px+
-
-#### **🎯 Resultado Final**
-
-Com essas implementações, **TODOS os CRUDs** (atuais e futuros) terão automaticamente:
-
-✅ **Layout perfeito em mobile**: Cards empilhados, navegação otimizada  
-✅ **Experiência fluida em tablet**: Híbrido entre mobile e desktop  
-✅ **Interface completa em desktop**: Todas as funcionalidades visíveis  
-✅ **Transições suaves**: Adaptação automática entre breakpoints  
-✅ **Performance otimizada**: CSS otimizado e componentes eficientes  
-
-> **💡 Dica**: Ao criar novos CRUDs, simplesmente siga os padrões já estabelecidos e utilize os componentes genéricos - a responsividade será automática!
-
----
-
-## 🔄 Migração Mock para API
-
-### � **Estado Atual vs. Futuro**
-
-#### **Atual (Desenvolvimento com Mocks):**
-```typescript
-export const agentService = new CRUDService<Agent>(
-  'agents',
-  mockAgents,  // ← Dados simulados em memória
-  {},
-  true         // ← Flag: usar mock = true
-);
-```
-
-#### **Futuro (Produção com API Real):**
-```typescript
-export const agentService = new CRUDService<Agent>(
-  'agents',
-  [],          // ← Array vazio (dados vêm da API)
-  { 
-    baseUrl: 'https://api.empresa.com',  // ← URL da sua API
-    headers: {
-      'Authorization': 'Bearer token',    // ← Token de auth
-      'Content-Type': 'application/json'
-    }
-  },
-  false        // ← Flag: usar API real = false
-);
-```
-
-### 🔧 **Implementação Necessária na API**
-
-Sua API deve implementar os seguintes endpoints:
-
-```bash
-# Listar com filtros e paginação
-GET /api/agents?page=1&limit=10&search=termo&status=active
-
-# Buscar por ID
-GET /api/agents/:id
-
-# Criar novo
-POST /api/agents
-Content-Type: application/json
-{
-  "name": "João Silva",
-  "email": "joao@exemplo.com",
-  "status": "active"
-}
-
-# Atualizar existente
-PUT /api/agents/:id
-Content-Type: application/json
-{
-  "name": "João Silva Santos",
-  "email": "joao.santos@exemplo.com"
-}
-
-# Deletar
-DELETE /api/agents/:id
-```
-
-### 📋 **Formato de Resposta Esperado**
-
-#### **Lista (GET /api/agents)**
-```json
-{
-  "data": [
-    {
-      "id": "1",
-      "name": "João Silva",
-      "email": "joao@exemplo.com",
-      "status": "active",
-      "createdAt": "2024-01-15T10:30:00Z"
-    }
-  ],
-  "pagination": {
-    "total": 150,
-    "page": 1,
-    "limit": 10,
-    "totalPages": 15
-  }
-}
-```
-
-#### **Item Individual (GET /api/agents/:id)**
-```json
-{
-  "data": {
-    "id": "1",
-    "name": "João Silva",
-    "email": "joao@exemplo.com",
-    "status": "active",
-    "createdAt": "2024-01-15T10:30:00Z"
-  }
-}
-```
-
-#### **Criação/Atualização (POST/PUT)**
-```json
-{
-  "data": {
-    "id": "1",
-    "name": "João Silva",
-    "email": "joao@exemplo.com",
-    "status": "active",
-    "createdAt": "2024-01-15T10:30:00Z"
-  },
-  "message": "Agente criado com sucesso"
-}
-```
-
-### ⚙️ **Configuração de Ambiente**
-
-Crie um arquivo `.env` na raiz do projeto:
-
-```bash
-# .env
-VITE_API_BASE_URL=https://api.empresa.com
-VITE_API_TOKEN=seu_token_aqui
-VITE_USE_MOCK=false
-```
-
-E ajuste o serviço para usar variáveis de ambiente:
-
-```typescript
-// src/services/agentService.ts
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-
-export const agentService = new CRUDService<Agent>(
-  'agents',
-  mockAgents,
-  { 
-    baseUrl: API_BASE_URL,
-    headers: {
-      'Authorization': `Bearer ${import.meta.env.VITE_API_TOKEN}`,
-      'Content-Type': 'application/json'
-    }
-  },
-  USE_MOCK  // Usar mock baseado na variável de ambiente
-);
-```
-
-### 🔄 **Processo de Migração Gradual**
-
-1. **Manter Mocks**: Continue usando mocks durante desenvolvimento
-2. **Implementar API**: Desenvolva os endpoints da API
-3. **Testar Integração**: Use Postman/Insomnia para testar API
-4. **Migrar Gradualmente**: Mude uma entidade por vez (agents → suppliers → etc.)
-5. **Validar Funcionalidades**: Confirme que filtros, paginação, etc. funcionam
-6. **Deploy Produção**: Altere flag para API real em produção
-
-### 🧪 **Exemplo de Teste de Integração**
-
-```typescript
-// src/tests/integration/agentService.test.ts
-describe('Agent Service Integration', () => {
-  beforeAll(() => {
-    // Configurar para usar API real em testes
-    process.env.VITE_USE_MOCK = 'false';
-  });
-
-  test('should fetch agents from API', async () => {
-    const result = await agentService.getAll({
-      page: 1,
-      limit: 10
-    });
-    
-    expect(result.data).toBeDefined();
-    expect(result.pagination).toBeDefined();
-    expect(Array.isArray(result.data)).toBe(true);
-  });
-
-  test('should create new agent', async () => {
-    const newAgent = {
-      name: 'Teste Silva',
-      email: 'teste@exemplo.com',
-      status: 'active' as const
-    };
-    
-    const result = await agentService.create(newAgent);
-    expect(result.id).toBeDefined();
-    expect(result.name).toBe(newAgent.name);
-  });
-});
-```
-
----
-
-## � Responsividade Completa
-
-### ✨ **Todas as Telas 100% Responsivas**
-
-Este sistema foi desenvolvido com **mobile-first design** e **responsividade completa**. Todos os componentes se adaptam perfeitamente a qualquer dispositivo:
-
-#### **🏠 Dashboard**
-- ✅ Cards de métricas em grid adaptativo
-- ✅ Gráficos responsivos (pizza, área, barras)
-- ✅ Sidebar colapsável em mobile
-- ✅ Header adaptativo com notificações
-
-#### **👥 CRUDs (Agentes, Fornecedores, etc.)**
-- ✅ Tabelas com modo card em mobile
-- ✅ Filtros empilhados em telas pequenas
-- ✅ Paginação otimizada para cada dispositivo
-- ✅ Calendários de data responsivos
-- ✅ Botões com textos adaptativos
-
-#### **🔧 Componentes Genéricos**
-- ✅ Table.tsx: dupla visualização (mobile/desktop)
-- ✅ Button.tsx: tamanhos escalonados
-- ✅ Formulários: campos responsivos
-- ✅ Modais: adaptativos ao viewport
-
-### 🎯 **Como Garantir Responsividade em Novos CRUDs**
-
-Ao criar novos CRUDs, siga estas práticas:
-
-```typescript
-// ✅ Use classes responsivas
-<div className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-
-// ✅ Textos adaptativos
-<h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
-
-// ✅ Botões responsivos
-<button className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base">
-
-// ✅ Gráficos com porcentagens
-<Pie innerRadius="30%" outerRadius="70%" />
-
-// ✅ Componentes condicionais
-<div className="block sm:hidden">Mobile</div>
-<div className="hidden sm:block">Desktop</div>
-```
-
-### 📊 **Breakpoints e Estratégia**
-
-```css
-/* Mobile First Strategy */
-.component {
-  /* Mobile styles (base) */
-  padding: 0.75rem;
-  font-size: 0.875rem;
-}
-
-@media (min-width: 640px) {
-  /* Tablet */
-  .component {
-    padding: 1rem;
-    font-size: 1rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  /* Desktop */
-  .component {
-    padding: 1.5rem;
-    font-size: 1.125rem;
-  }
-}
-```
-
-### 🏆 **Benefícios da Responsividade**
-
-✅ **UX Perfeita**: Interface adaptada para cada dispositivo  
-✅ **Performance**: Layouts otimizados por tamanho de tela  
-✅ **Acessibilidade**: Textos e botões com tamanhos adequados  
-✅ **Profissional**: Visual consistente em qualquer resolução  
-✅ **SEO Friendly**: Google prioriza sites mobile-friendly  
-✅ **Manutenibilidade**: Código organizado e previsível  
-
-> **💡 Resultado:** Sistema que funciona perfeitamente em smartphones, tablets, laptops e desktops!
-
----
-
-## �🚀 Próximos Passos
-
-### � **Melhorias Imediatas**
-
-#### **1. Componentes de Formulários**
-- [ ] Criar `FormField.tsx` genérico
-- [ ] Implementar `DatePicker` com calendário visual
-- [ ] Desenvolver `SelectField` com busca
-- [ ] Adicionar `FileUpload` com drag & drop
-
-#### **2. Utilitários Essenciais**
-- [ ] Formatadores (`formatCurrency`, `formatPhone`, `formatCNPJ`)
-- [ ] Validadores (`isValidEmail`, `isValidCNPJ`)
-- [ ] Helpers de data (`formatDate`, `getDateRange`)
-- [ ] Utilitários de API (`buildQueryString`)
-
-#### **3. Funcionalidades Avançadas**
-- [ ] **Autenticação**: Login, logout, proteção de rotas
-- [ ] **Autorização**: Permissões por usuário/papel
-- [ ] **Upload de Arquivos**: Imagens, PDFs, etc.
-- [ ] **Exportação**: Excel, PDF, CSV
-- [ ] **Notificações**: Toast, alerts, confirmações
-
-### 📈 **Roadmap de Crescimento**
-
-#### **Fase 1: Consolidação (1-2 semanas)**
-- ✅ Documentação completa (concluída)
-- [ ] Correção de erros TypeScript
-- [ ] Testes unitários básicos
-- [ ] Popular pastas vazias (`forms/`, `utils/`)
-
-#### **Fase 2: Expansão (3-4 semanas)**
-- [ ] Criar 2-3 novos CRUDs (Fornecedores, Clientes, Produtos)
-- [ ] Implementar autenticação
-- [ ] Conectar com API real
-- [ ] Dashboard com métricas reais
-
-#### **Fase 3: Otimização (5-6 semanas)**
-- [ ] Performance otimizada
-- [ ] PWA (Progressive Web App)
-- [ ] Modo offline
-- [ ] Notificações push
-
-### 🏗️ **Melhorias de Arquitetura**
-
-#### **1. Gerenciamento de Estado**
-```typescript
-// Considerar Redux Toolkit ou Zustand para estado global
-import { create } from 'zustand';
-
-interface AppStore {
-  user: User | null;
-  theme: 'light' | 'dark';
-  notifications: Notification[];
-  setUser: (user: User) => void;
-  toggleTheme: () => void;
-}
-
-export const useAppStore = create<AppStore>((set) => ({
-  user: null,
-  theme: 'light',
-  notifications: [],
-  setUser: (user) => set({ user }),
-  toggleTheme: () => set((state) => ({ 
-    theme: state.theme === 'light' ? 'dark' : 'light' 
-  })),
-}));
-```
-
-#### **2. Cache e Performance**
-```typescript
-// React Query para cache de dados da API
-import { useQuery } from '@tanstack/react-query';
-
-export const useAgents = (filters: AgentFilters) => {
-  return useQuery({
-    queryKey: ['agents', filters],
-    queryFn: () => agentService.getAll(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutos
-  });
-};
-```
-
-#### **3. Lazy Loading e Code Splitting**
-```typescript
-// Carregamento preguiçoso de páginas
-import { lazy, Suspense } from 'react';
-
-const AgentsPage = lazy(() => import('./pages/AgentsPage'));
-const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
-
-// No App.tsx
-<Suspense fallback={<div>Carregando...</div>}>
-  <Routes>
-    <Route path="/agents" element={<AgentsPage />} />
-    <Route path="/suppliers" element={<SuppliersPage />} />
-  </Routes>
-</Suspense>
-```
-
-### 📊 **Métricas e Monitoramento**
-
-#### **1. Analytics**
-- [ ] Google Analytics 4
-- [ ] Hotjar para UX
-- [ ] Sentry para erro tracking
-
-#### **2. Performance**
-- [ ] Web Vitals monitoring
-- [ ] Lighthouse CI
-- [ ] Bundle analyzer
-
-### 🎯 **Conclusão**
-
-Este sistema CRUD genérico está **bem arquitetado** e **pronto para crescimento**. Com a documentação completa, comentários no código e estrutura preparada, qualquer desenvolvedor pode:
-
-✅ **Entender** a arquitetura rapidamente  
-✅ **Criar** novos CRUDs em minutos  
-✅ **Expandir** funcionalidades facilmente  
-✅ **Migrar** para produção com confiança  
-
-### 🤝 **Contribuição**
-
-1. Fork o projeto
-2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
-3. Commit: `git commit -m 'Adiciona nova funcionalidade'`
-4. Push: `git push origin feature/nova-funcionalidade`
-5. Abra um Pull Request
-
-### 📄 **Licença**
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
-
-**✨ Sistema desenvolvido com ❤️ para facilitar a criação de CRUDs modernos!**
+**🎉 Sistema CRUD Genérico - Desenvolvido para facilitar sua vida!**

@@ -24,8 +24,8 @@ export interface Agent extends BaseEntity {
   role?: string;
   notes?: string;
   lastLogin?: Date | string | null;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // DTO para criação de agente

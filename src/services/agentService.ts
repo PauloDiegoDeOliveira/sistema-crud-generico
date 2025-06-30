@@ -5,34 +5,31 @@ import { mockAgents } from '../data/mockAgents';
 // Serviço específico para agentes
 export class AgentService extends CRUDService<Agent> {
   constructor(useMock = true) {
-    super('agents', mockAgents, {
-      baseUrl: process.env.REACT_APP_API_URL || '/api',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-      }
-    }, useMock);
+    super(
+      'agents', 
+      mockAgents, 
+      process.env.REACT_APP_API_URL || '/api', 
+      useMock
+    );
   }
 
   // Métodos específicos para agentes podem ser adicionados aqui
   async getActiveAgents() {
-    const response = await this.list({
-      filters: { status: 'active' }
+    const response = await this.search({
+      status: 'active'
     });
     return response;
   }
 
   async getAgentsByDepartment(department: string) {
-    const response = await this.list({
-      filters: { department }
+    const response = await this.search({
+      department
     });
     return response;
   }
 
   async searchAgents(query: string) {
-    const response = await this.list({
-      search: query
-    });
+    const response = await this.searchByText(query, ['name', 'email', 'company']);
     return response;
   }
 }

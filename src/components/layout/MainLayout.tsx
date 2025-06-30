@@ -7,6 +7,7 @@ import {
   SunIcon,
   ChartBarIcon,
   BellIcon,
+  ShoppingBagIcon,
 } from '@heroicons/react/24/outline';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -32,6 +33,7 @@ interface NavigationItem {
 const navigation: NavigationItem[] = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Agentes', href: '/agents', icon: AgentsIcon },
+  { name: 'Produtos', href: '/products', icon: ShoppingBagIcon },
   { name: 'Relatórios', href: '/reports', icon: ChartBarIcon },
   { name: 'Configurações', href: '/settings', icon: Cog6ToothIcon },
 ];

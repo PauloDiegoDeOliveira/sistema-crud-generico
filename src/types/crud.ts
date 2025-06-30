@@ -1,160 +1,158 @@
-// Tipos genéricos para o sistema CRUD
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// ============================================================================
+// TIPOS GENÉRICOS PARA SISTEMA CRUD
+// ============================================================================
+// Este arquivo define todos os tipos TypeScript que tornam o sistema genérico
+// Aqui você entende COMO o sistema funciona por baixo dos panos
+
+import React from 'react';
+
+/**
+ * 🔥 INTERFACE BASE - O CORAÇÃO DO SISTEMA GENÉRICO
+ * Todas as entidades (Agent, Product, etc.) DEVEM ter pelo menos estes campos
+ */
 export interface BaseEntity {
-  id: string | number;
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
+  id: string;           // ID único obrigatório
+  createdAt: string;    // Data de criação obrigatória
+  [key: string]: any;   // Permite campos personalizados (name, email, etc.)
 }
 
-// Configuração de campo da tabela
-export interface TableColumn<T = Record<string, unknown>> {
-  key: keyof T;
-  label: string;
-  sortable?: boolean;
-  width?: string;
-  render?: 'text' | 'date' | 'badge' | 'currency' | 'boolean' | 'custom';
-  renderFunction?: (value: unknown, item: T) => React.ReactNode;
-  className?: string;
+/**
+ * 🎛️ TIPOS DE CAMPOS PARA FILTROS E FORMULÁRIOS
+ * Define que tipos de input podem ser usados
+ */
+export type FieldType = 
+  | 'text'        // Campo de texto simples
+  | 'email'       // Campo de email
+  | 'password'    // Campo de senha
+  | 'number'      // Campo numérico
+  | 'select'      // Dropdown de seleção
+  | 'multiselect' // Seleção múltipla
+  | 'date'        // Seletor de data
+  | 'daterange'   // Intervalo de datas
+  | 'boolean'     // Checkbox verdadeiro/falso
+  | 'textarea'    // Área de texto grande
+  | 'tel'         // Campo de telefone
+  | 'url';        // Campo de URL
+
+/**
+ * 📋 OPÇÕES PARA CAMPOS SELECT
+ * Usado nos dropdowns de filtros e formulários
+ */
+export interface SelectOption {
+  value: string;    // Valor interno
+  label: string;    // Texto mostrado ao usuário
+  disabled?: boolean; // Se a opção está desabilitada
 }
 
-// Configuração da tabela
-export interface TableConfig<T> {
-  columns: TableColumn<T>[];
-  actions?: ('view' | 'edit' | 'delete' | 'custom')[];
-  customActions?: {
-    key: string;
-    label: string;
-    icon?: React.ReactNode;
-    onClick: (item: T) => void;
-    className?: string;
-  }[];
-  pagination?: {
-    enabled: boolean;
-    pageSize: number;
-    pageSizeOptions?: number[];
-  };
-  sorting?: {
-    enabled: boolean;
-    defaultSort?: {
-      key: keyof T;
-      direction: 'asc' | 'desc';
-    };
-  };
+/**
+ * 📊 CONFIGURAÇÃO DE COLUNA DA TABELA
+ * Define como cada coluna da tabela deve aparecer e se comportar
+ */
+export interface TableColumn<T extends BaseEntity> {
+  key: keyof T;                                          // Campo da entidade (ex: 'name', 'email')
+  label: string;                                         // Título da coluna mostrado na tabela
+  sortable?: boolean;                                    // Se pode ordenar por esta coluna
+  searchable?: boolean;                                  // Se pode buscar por esta coluna
+  filterable?: boolean;                                  // Se pode filtrar por esta coluna
+  width?: string;                                        // Largura da coluna (ex: '200px', '20%')
+  render?: (value: any, row: T) => React.ReactNode;     // Função personalizada para mostrar o valor
+  className?: string;                                    // Classes CSS personalizadas
 }
 
-// Configuração de campo do formulário
-export interface FormField {
-  name: string;
-  label: string;
-  type: 'text' | 'email' | 'tel' | 'password' | 'number' | 'select' | 'multiselect' | 'textarea' | 'date' | 'datetime' | 'checkbox' | 'radio';
-  required?: boolean;
-  placeholder?: string;
-  options?: { value: string | number | boolean; label: string }[];
-  validation?: {
-    min?: number;
-    max?: number;
-    pattern?: RegExp;
-    custom?: (value: unknown) => string | null;
-  };
-  grid?: {
-    cols?: number; // quantas colunas ocupa (1-12)
-    break?: 'sm' | 'md' | 'lg' | 'xl';
-  };
-  conditional?: {
-    field: string;
-    value: unknown;
-    operator?: '=' | '!=' | 'in' | 'not-in';
-  };
+/**
+ * 🔍 CONFIGURAÇÃO DE CAMPO DE FILTRO
+ * Define os filtros que aparecem acima da tabela
+ */
+export interface FilterField<T extends BaseEntity> {
+  key: keyof T | string;                                 // Campo para filtrar (ex: 'department')
+  label: string;                                         // Rótulo do filtro (ex: 'Departamento')
+  type: FieldType;                                       // Tipo do input (text, select, etc.)
+  placeholder?: string;                                  // Texto de exemplo no input
+  options?: SelectOption[];                              // Opções para select/multiselect
+  defaultValue?: any;                                       // Valor padrão para o filtro
 }
 
-// Configuração do formulário
-export interface FormConfig {
-  fields: FormField[];
-  layout?: 'single' | 'two-column' | 'grid';
-  submitText?: string;
-  cancelText?: string;
-  validation?: 'onChange' | 'onBlur' | 'onSubmit';
-}
-
-// Configuração dos filtros
-export interface FilterConfig {
-  fields: FormField[];
-  layout?: 'horizontal' | 'vertical' | 'grid';
-  searchPlaceholder?: string;
-  resetText?: string;
-  applyText?: string;
-}
-
-// Configuração completa do CRUD
+/**
+ * 🎯 CONFIGURAÇÃO COMPLETA DE UM CRUD
+ * Esta é a "receita" que você cria para cada CRUD novo
+ * EXEMPLO: agentConfig, productConfig, etc.
+ */
 export interface CRUDConfig<T extends BaseEntity> {
-  entity: string;
-  title: string;
-  description?: string;
-  icon?: React.ReactNode;
-  
-  // Configurações dos componentes
-  table: TableConfig<T>;
-  form: FormConfig;
-  filters?: FilterConfig;
-  
-  // Configurações de comportamento
-  permissions?: {
-    create?: boolean;
-    read?: boolean;
-    update?: boolean;
-    delete?: boolean;
-  };
-  
-  // Configurações de API
-  api?: {
-    baseUrl?: string;
-    endpoints?: {
-      list?: string;
-      create?: string;
-      update?: string;
-      delete?: string;
-      show?: string;
+  // 📋 Identificação do CRUD
+  entity: string;                                        // Nome da entidade (ex: 'agents', 'products')
+  title: string;                                         // Título mostrado na página (ex: 'Agentes')
+  description?: string;                                  // Descrição opcional
+  icon?: React.ComponentType<any>;                       // Ícone para o menu
+
+  // 📊 Configuração da tabela
+  table: {
+    columns: TableColumn<T>[];                           // Quais colunas mostrar
+    defaultSort?: {                                      // Ordenação padrão
+      field: keyof T;                                    // Campo para ordenar (ex: 'name')
+      direction: 'asc' | 'desc';                         // Crescente ou decrescente
     };
-    headers?: Record<string, string>;
+    pageSize?: number;                                   // Quantos itens por página (padrão: 10)
+    pageSizeOptions?: number[];                          // Opções de itens por página [10, 25, 50]
   };
-  
-  // Configurações de UI
-  ui?: {
-    showSearch?: boolean;
-    showFilters?: boolean;
-    showExport?: boolean;
-    showImport?: boolean;
-    compactMode?: boolean;
+
+  // 🔍 Configuração de filtros (opcional)
+  filters?: FilterField<T>[];                            // Quais filtros mostrar acima da tabela
+
+  // ⚙️ Configurações de comportamento
+  behavior?: {
+    enableCreate?: boolean;
+    enableEdit?: boolean;
+    enableDelete?: boolean;
+    enableSearch?: boolean;
+    searchFields?: (keyof T)[];
   };
 }
 
-// Estado do CRUD
-export interface CRUDState<T> {
+/**
+ * Estado do CRUD genérico
+ */
+export interface CRUDState<T extends BaseEntity> {
+  // Dados
   items: T[];
-  loading: boolean;
-  error: string | null;
+  filteredItems: T[];
   selectedItems: T[];
   currentItem: T | null;
-  filters: Record<string, unknown>;
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-  sorting: {
-    key: keyof T | null;
-    direction: 'asc' | 'desc';
-  };
+  
+  // Estados de loading
+  loading: boolean;
+  
+  // Paginação
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  
+  // Filtros e busca
+  filters: Record<string, any>;
+  searchTerm: string;
+  sortField: keyof T | null;
+  sortDirection: 'asc' | 'desc';
+  
+  // UI
+  showFilters: boolean;
+  
+  // Erros
+  error: string | null;
 }
 
-// Ações do CRUD
-export interface CRUDActions<T> {
-  // CRUD básico
-  loadItems: (params?: ListParams) => Promise<void>;
-  createItem: (item: Omit<T, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateItem: (id: string | number, item: Partial<T>) => Promise<void>;
-  deleteItem: (id: string | number) => Promise<void>;
-  deleteItems: (ids: (string | number)[]) => Promise<void>;
+/**
+ * Ações do CRUD genérico
+ */
+export interface CRUDActions<T extends BaseEntity> {
+  // Operações CRUD
+  create: (data: Partial<T>) => Promise<T>;
+  update: (id: string, data: Partial<T>) => Promise<T>;
+  delete: (id: string) => Promise<void>;
+  
+  // Carregamento de dados
+  loadItems: () => Promise<void>;
+  refreshItems: () => Promise<void>;
   
   // Seleção
   selectItem: (item: T) => void;
@@ -162,67 +160,35 @@ export interface CRUDActions<T> {
   clearSelection: () => void;
   
   // Filtros e busca
-  setFilters: (filters: Record<string, unknown>) => void;
+  setFilters: (filters: Record<string, any>) => void;
   clearFilters: () => void;
-  search: (query: string) => void;
+  setSearchTerm: (term: string) => void;
+  setSorting: (field: keyof T, direction: 'asc' | 'desc') => void;
   
   // Paginação
   setPage: (page: number) => void;
-  setPageSize: (pageSize: number) => void;
+  setPageSize: (size: number) => void;
   
-  // Ordenação
-  setSorting: (key: keyof T, direction: 'asc' | 'desc') => void;
+  // UI
+  toggleFilters: () => void;
   
-  // Estado
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
+  // Utilitários
+  clearError: () => void;
 }
 
-// Hook genérico do CRUD
-export interface UseCRUD<T extends BaseEntity> {
+/**
+ * Hook do CRUD genérico - retorna estado + ações
+ */
+export interface UseGenericCRUD<T extends BaseEntity> {
   state: CRUDState<T>;
   actions: CRUDActions<T>;
 }
 
-// Configuração do serviço
-export interface ServiceConfig {
-  baseUrl: string;
-  timeout?: number;
-  headers?: Record<string, string>;
-  interceptors?: {
-    request?: (config: Record<string, unknown>) => Record<string, unknown>;
-    response?: (response: Record<string, unknown>) => Record<string, unknown>;
-    error?: (error: unknown) => Promise<unknown>;
-  };
-}
-
-// Resposta da API
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  success: boolean;
-  errors?: string[];
-}
-
-// Resposta de listagem
-export interface ListResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-  message?: string;
-  success: boolean;
-}
-
-// Parâmetros de listagem
-export interface ListParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  filters?: Record<string, unknown>;
-  sort?: string;
-  order?: 'asc' | 'desc';
+/**
+ * Props do componente GenericCRUDPage
+ */
+export interface GenericCRUDPageProps<T extends BaseEntity> {
+  config: CRUDConfig<T>;
+  className?: string;
+  style?: React.CSSProperties;
 }
